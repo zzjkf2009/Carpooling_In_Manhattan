@@ -116,12 +116,12 @@ TEST(carpoolingTest, makeActionTestMove) {
         Car car(b);
         Carpooling_cloud_server cloudServer2(car,10,10);
         cloudServer.makeAction(a,0);
-        EXPECT_EQ(1,cloudServer.vhicle.v_loc.first);
+        EXPECT_EQ(1,cloudServer.vehicle.v_loc.first);
         cloudServer2.makeAction(a,0);
-        EXPECT_EQ(3,cloudServer2.vhicle.v_loc.first);
+        EXPECT_EQ(3,cloudServer2.vehicle.v_loc.first);
 }
 /**
- * [TEST Testing if the current car location is at goal node, then check if it is pick node or drop node, if ir is pick node then add this passanger]
+ * [TEST Testing if the current car location is at goal node, then check if it is pick node or drop node, if ir is pick node then add this passenger]
  */
 TEST(carpoolingTest, makeActionTestPick) {
         Json::Reader reader;
@@ -137,7 +137,7 @@ TEST(carpoolingTest, makeActionTestPick) {
         EXPECT_EQ(2,cloudServer.names.size());
         EXPECT_EQ(3,cloudServer.places.size());
         EXPECT_EQ(2,cloudServer.pick_drop.size());
-        EXPECT_EQ(1,cloudServer.vhicle.passanger.size());
+        EXPECT_EQ(1,cloudServer.vehicle.passenger.size());
 }
 
 /**

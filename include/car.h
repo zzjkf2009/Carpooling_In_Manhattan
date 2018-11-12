@@ -24,9 +24,9 @@ typedef pair< int, int> Location;
 struct Car {
         Car();
         Car(Location init_loc);
-        unsigned int n_passangers;
+        unsigned int n_passengers;
         Location v_loc;
-        std::unordered_set<std::string> passanger;
+        std::unordered_set<std::string> passenger;
         void moveOneStep(const int &Direction);
 };
 

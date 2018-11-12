@@ -14,13 +14,13 @@
 /**
  * [Car::Car Constructor, init the car location to (0,0)]
  */
-Car::Car() : n_passangers(0){
+Car::Car() : n_passengers(0){
         v_loc.first = 0; v_loc.second = 0;
 }
 /**
  * [Car::Car Constructor, init the car location to input location]
  */
-Car::Car(Location init_loc) : v_loc(init_loc),n_passangers(0){
+Car::Car(Location init_loc) : v_loc(init_loc),n_passengers(0){
 
 }
 /**

@@ -48,7 +48,7 @@ std::vector<int> pick_drop;  // an array to record the if the location is for dr
 std::vector<Location> places;  // an array to record the start and end locations
 int VISITED_ALL;
 std::shared_ptr<Node> initNode = std::make_shared<Node>(0);
-Car vhicle;
+Car vehicle;
 unsigned int x_boundry;
 unsigned int y_boundry;
 

@@ -11,14 +11,18 @@
  */
 #include "carpooling_cloud_server.h"
 Carpooling_cloud_server::Carpooling_cloud_server(unsigned int x, unsigned int y) : x_boundry(x),y_boundry(y){
-        places.push_back(vhicle.v_loc);
+        places.push_back(vehicle.v_loc);
+        std::cout << "The car initial location is [0,0]" << '\n';
 }
 
-Carpooling_cloud_server::Carpooling_cloud_server(Car v,unsigned int x, unsigned int y) : vhicle(v),x_boundry(x),y_boundry(y){
-        if(vhicle.v_loc.first > x_boundry || vhicle.v_loc.second > y_boundry)
+Carpooling_cloud_server::Carpooling_cloud_server(Car v,unsigned int x, unsigned int y) : vehicle(v),x_boundry(x),y_boundry(y){
+        if(vehicle.v_loc.first > x_boundry || vehicle.v_loc.second > y_boundry)
                 throw("Invalid init vechile location");
-        else
-                places.push_back(vhicle.v_loc);
+        else {
+                places.push_back(vehicle.v_loc);
+                std::cout << "The car inital location is ["<<vehicle.v_loc.first<<", "<<vehicle.v_loc.second <<" ]"<<'\n';
+        }
+
 }
 
 /**
@@ -51,7 +55,7 @@ void Carpooling_cloud_server::buildGrids(){
 void Carpooling_cloud_server::add_start(Json::Value request){
         if(!request.empty()) {
                 for(int i = 0; i < request["request"].size(); i++) {
-                        // add the name of the passanger to the list
+                        // add the name of the passenger to the list
                         std::string personName = request["request"][i]["name"].asString();
                         names.push_back(personName);
                         // Create the location for request's start and desitination point
@@ -104,26 +108,26 @@ void Carpooling_cloud_server::makeAction(Location target,int index){
 
 // comaparing the current location of the car with the target node location
 
-// If the current location is same as target location, means arriveed, time to pick up or drop passangers
-        if(vhicle.v_loc.first == target.first && vhicle.v_loc.second == target.second) {
+// If the current location is same as target location, means arriveed, time to pick up or drop passengers
+        if(vehicle.v_loc.first == target.first && vehicle.v_loc.second == target.second) {
 // Check if the target location is for picking up or droppings, 0 for pick up , 1 for drop
                 if(pick_drop[index -1] == 0) { // pick up
-                        std::cout <<"The vhicle now is at ["<<vhicle.v_loc.first<<", "<<vhicle.v_loc.second<<"]. "<< "Pick up the passanger: "<< names[index -1] << '\n';
-                        vhicle.n_passangers++;
-                        vhicle.passanger.insert(names[index -1]); // add this passanger
+                        std::cout <<"The vehicle now is at ["<<vehicle.v_loc.first<<", "<<vehicle.v_loc.second<<"]. "<< "Pick up the passenger: "<< names[index -1] << '\n';
+                        vehicle.n_passengers++;
+                        vehicle.passenger.insert(names[index -1]); // add this passenger
                         add_end(index); // add the end location to the graph
                         deleteVertex(index); // delete this visited start point
                         return;
                 }
                 else if(pick_drop[index -1] == 1) { // 1 for drop
-                        std::cout <<"The vhicle now is at ["<<vhicle.v_loc.first<<", "<<vhicle.v_loc.second<<"]. "<< "Drop the passanger: "<< names[index -1] << '\n';
-                        vhicle.n_passangers--;
-                        if(vhicle.passanger.find(names[index -1]) == vhicle.passanger.end()) {
-                                //std::cout << "This passanger is not on the vechile" << '\n';
-                                throw("This passanger is not on the vechile");
+                        std::cout <<"The vehicle now is at ["<<vehicle.v_loc.first<<", "<<vehicle.v_loc.second<<"]. "<< "Drop the passenger: "<< names[index -1] << '\n';
+                        vehicle.n_passengers--;
+                        if(vehicle.passenger.find(names[index -1]) == vehicle.passenger.end()) {
+                                //std::cout << "This passenger is not on the vechile" << '\n';
+                                throw("This passenger is not on the vechile");
                                 return;
                         }
-                        vhicle.passanger.erase(vhicle.passanger.find(names[index -1]));
+                        vehicle.passenger.erase(vehicle.passenger.find(names[index -1]));
                         startToend.erase(startToend.find(names[index -1]));
                         deleteVertex(index);
                 }
@@ -136,15 +140,15 @@ void Carpooling_cloud_server::makeAction(Location target,int index){
         // If not same, need to move one step
         else {
                 // choose to the path that make mininmal turns, so the car will move along x first and then move along y
-                if(vhicle.v_loc.first != target.first)
-                        vhicle.v_loc.first < target.first ? vhicle.moveOneStep(1) : vhicle.moveOneStep(-1);
+                if(vehicle.v_loc.first != target.first)
+                        vehicle.v_loc.first < target.first ? vehicle.moveOneStep(1) : vehicle.moveOneStep(-1);
                 else
-                        vhicle.v_loc.second < target.second ? vhicle.moveOneStep(2) : vhicle.moveOneStep(-2);
-                places[0] = vhicle.v_loc; // update the current location
-                std::cout << "The vhicle now is at ["<<vhicle.v_loc.first<<", "<<vhicle.v_loc.second<<"]"<< ". There are "<<vhicle.n_passangers<<" passangers in the car.";
-                if(vhicle.n_passangers > 0) {
+                        vehicle.v_loc.second < target.second ? vehicle.moveOneStep(2) : vehicle.moveOneStep(-2);
+                places[0] = vehicle.v_loc; // update the current location
+                std::cout << "The vehicle now is at ["<<vehicle.v_loc.first<<", "<<vehicle.v_loc.second<<"]"<< ". There are "<<vehicle.n_passengers<<" passengers in the car.";
+                if(vehicle.n_passengers > 0) {
                         std::cout << " They are : ";
-                        for(const auto & i : vhicle.passanger)
+                        for(const auto & i : vehicle.passenger)
                                 std::cout << i << " ";
                 }
                 std::cout << '\n';
@@ -183,6 +187,6 @@ void Carpooling_cloud_server::carpooling(Json::Value request) {
                 buildGrids();   // Build the vertex graph
                 int index = TravelSalesMan(1,0,initNode); // Find the shortest path and return the next node index
                 Location point = places[index];
-                makeAction(point,index);   // Make action according to the desired node and corrent vhicle location
+                makeAction(point,index);   // Make action according to the desired node and corrent vehicle location
         }
 }
