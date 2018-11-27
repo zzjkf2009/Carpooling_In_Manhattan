@@ -40,22 +40,23 @@ Carpooling_cloud_server(unsigned int x, unsigned int y);
 Carpooling_cloud_server(Car v,unsigned int x, unsigned int y);
 //private:
 std::vector<std::vector<unsigned int> > grid;  // A skew matrix that contains the distance between each vertex
-std::unordered_map<std::string,Location> startToend;  // A map that maps the name of the customer to his/her desitination
-// The following vector share the same index, TODO: find a beeter container to store the data, list is good for inserting and deleting, but bad at accessing element
-std::vector<std::string> names;  // an array to record the name
-std::vector<int> pick_drop;  // an array to record the if the location is for droping or picking up.
-// the array places has one more element comaparing to vector above, the init_loc
+std::unordered_map<std::string,Location> startToend;  // A map that maps the name of the customer to his/her destination
+// The following vector share the same element index, TODO: find a better container to store the data, std::list is good for inserting and deleting, but bad at accessing element
+std::vector<std::string> names;  // an array thats record names
+std::vector<int> pick_drop;  // an array that records the wether the location is for dropping off or picking up.
+// the vector "places" has one more element comparing to other vectors above,which is the init_loc
 std::vector<Location> places;  // an array to record the start and end locations
-int VISITED_ALL;
+std::vector<int> mask; // A vector that contains the indicators of cities, 1 for visited, 0 for unvisited
+std::vector<int> VISITED_ALL;
 std::shared_ptr<Node> initNode = std::make_shared<Node>(0);
 Car vehicle;
-unsigned int x_boundry;
-unsigned int y_boundry;
+unsigned int x_boundary;  // the boundary of the city in x
+unsigned int y_boundary; // the boundary of the city in y
 
 int calcualteD(Location a, Location b) const;
 void buildGrids();
 void add_start(Json::Value request);
-int  TravelSalesMan(int mask,int pos,std::shared_ptr<Node> node);
+int TravelSalesMan(std::vector<int> mask,int pos,std::shared_ptr<Node> node);
 void makeAction(Location target,int index);
 void deleteVertex(int index);
 void add_end(int index);

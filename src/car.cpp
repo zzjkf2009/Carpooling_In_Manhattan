@@ -12,35 +12,35 @@
 #include "car.h"
 
 /**
- * [Car::Car Constructor, init the car location to (0,0)]
+ * [Car::Car Constructor, initialize the car location to (0,0)]
  */
 Car::Car() : n_passengers(0){
         v_loc.first = 0; v_loc.second = 0;
 }
 /**
- * [Car::Car Constructor, init the car location to input location]
+ * [Car::Car Constructor, initialize the car location to the input location]
  */
 Car::Car(Location init_loc) : v_loc(init_loc),n_passengers(0){
 
 }
 /**
- * [car::moveOneStep Let the car move one step forward,+-1 for moving to horizantal,+-2 for moving verticle, 0 for standing still.Other nubers are not accpect
+ * [car::moveOneStep Let the car move one step forward: +-1 for moving horizontally,+-2 for moving vertically, 0 for standing still. Other numbers are not accepted
  *  the location of the car will change accordingly]
  * @param toHere [direction of moving]
  * @param v_loc  [Location of the car]
  */
 void Car::moveOneStep(const int &Direction){
         switch(Direction) {
-        case 1: v_loc.first++;
+        case 1: v_loc.first++; // move to the right, x axis
                 break;
         case -1: v_loc.first--;
                 break;
-        case 2: v_loc.second++;
+        case 2: v_loc.second++; // y axis
                 break;
         case -2: v_loc.second--;
                 break;
         case 0: break;
-        default: throw("+-1 for moving to horizantal,+-2 for moving verticle, 0 for standing still.Other nubers are not accpect");
+        default: throw("+-1 for moving horizontally,+-2 for moving vertically, 0 for standing still. Other numbers are not accepted");
                 break;
         }
 
