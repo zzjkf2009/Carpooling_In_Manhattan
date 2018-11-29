@@ -20,6 +20,7 @@
  #include <unordered_map>
  #include <cmath>
  #include <memory>
+ #include <list>
  #include <climits>
 
 struct Node {
@@ -30,8 +31,13 @@ struct Node {
         std::shared_ptr<Node> next;
 };
 
+struct RequestInfo {
+        std::string name;
+        Location start;
+        Location end;
+};
 /**
- * @brif: This is the class that reads the carpool requests and use the Dynamic Programming to
+ * @brief: This is the class that reads the carpool requests and use the Dynamic Programming to
  * solve the shortest path among the vertex (start and end locations). Travelling Salesman Problem
  */
 class Carpooling_cloud_server {
@@ -52,15 +58,19 @@ std::shared_ptr<Node> initNode = std::make_shared<Node>(0);
 Car vehicle;
 unsigned int x_boundary;  // the boundary of the city in x
 unsigned int y_boundary; // the boundary of the city in y
+std::vector<std::vector<int> > dp; // A look-up table that stores the the possible state values to optimize the search, its size is (2^N by N)
+std::list<RequestInfo> RequestList; // A list that stores the request info
 
 int calcualteD(Location a, Location b) const;
 void buildGrids();
-void add_start(Json::Value request);
+void ReadRequest(Json::Value request);
+void add_start(int NumVertex);
 int TravelSalesMan(std::vector<int> mask,int pos,std::shared_ptr<Node> node);
 void makeAction(Location target,int index);
 void deleteVertex(int index);
 void add_end(int index);
 void carpooling(Json::Value request);
+void createDPtable(int size);
 };
 
 #endif

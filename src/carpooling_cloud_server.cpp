@@ -10,9 +10,9 @@
  * terms of the BSD license.
  */
 #include "carpooling_cloud_server.h"
-
+#include <math.h>
 /*
- * @brif: Constructor, initialize the Manhattan map as a (x by y) grid
+ * @brief: Constructor, initialize the Manhattan map as a (x by y) grid
  */
 Carpooling_cloud_server::Carpooling_cloud_server(unsigned int x, unsigned int y) : x_boundary(x),y_boundary(y){
         places.push_back(vehicle.v_loc);
@@ -20,7 +20,7 @@ Carpooling_cloud_server::Carpooling_cloud_server(unsigned int x, unsigned int y)
 }
 
 /*
- * @brif: Constructor, initialize the Manhattan map as a (x by y) grid and check if the init location of the car is beyond the range
+ * @brief: Constructor, initialize the Manhattan map as a (x by y) grid and check if the init location of the car is beyond the range
  */
 Carpooling_cloud_server::Carpooling_cloud_server(Car v,unsigned int x, unsigned int y) : vehicle(v),x_boundary(x),y_boundary(y){
         if(vehicle.v_loc.first > x_boundary || vehicle.v_loc.second > y_boundary)
@@ -33,7 +33,7 @@ Carpooling_cloud_server::Carpooling_cloud_server(Car v,unsigned int x, unsigned 
 }
 
 /**
- * @brif: Calculate the Manhattan distance between two vertex
+ * @brief: Calculate the Manhattan distance between two vertex
  * @param  a [Location] coordinate (x,y) of the vertex
  * @param  b [Location] coordinate (x,y) of the vertex
  * @return   [int] Manhattan distance
@@ -42,10 +42,10 @@ int Carpooling_cloud_server::calcualteD(Location a, Location b) const {
         return abs(a.first - b.first) + abs(a.second - b.second);
 }
 /**
- * @brif: Create a skew matrix that contains the distance between each vertex
+ * @brief: Create a skew matrix that contains the distance between each vertex
  */
 void Carpooling_cloud_server::buildGrids(){
-        unsigned int size = places.size();
+        int size = places.size();
         grid = std::vector<std::vector<unsigned int> >(size, std::vector<unsigned int>(size,0));
         for(int i = 0; i< size - 1; i++) {
                 for(int j = i+1; j< size; j++) {
@@ -56,37 +56,68 @@ void Carpooling_cloud_server::buildGrids(){
         VISITED_ALL.assign(size,1);
         mask.assign(size,0);
         mask[0] = 1;
+        createDPtable(size);
 }
 /**
- * @brif: add the request info to the server, which will read the info (name, start, end) of each person.
- * @param request [Json::Value] read the request info
+ * @brief: add the request info to the RequestList, which will read the info (name, start, end) of each person.
+ * @param request [Json::Value]  request info in Json
  */
-void Carpooling_cloud_server::add_start(Json::Value request){
+void Carpooling_cloud_server::ReadRequest(Json::Value request){
         if(!request.empty()) {
                 for(int i = 0; i < request["request"].size(); i++) {
-                        // Add the name of the passenger to the list
+                        RequestInfo requestinfo;
+                        // Read the name, start and end location from the request
                         std::string personName = request["request"][i]["name"].asString();
-                        names.push_back(personName);
-                        // Read the start and end location from the request
                         Location start(request["request"][i]["start"][0].asInt(),request["request"][i]["start"][1].asInt());
                         Location end(request["request"][i]["end"][0].asInt(),request["request"][i]["end"][1].asInt());
-                        // Check if the location is inside the boundary
-                        if(start.first < x_boundary && end.first < x_boundary && start.second < y_boundary && end.second < y_boundary) {
-                                startToend.insert(std::make_pair(personName,end));
-                                // Add the location of the start point to the list
-                                places.push_back(start);
-                                // Add the indicator of the location, 0 for pick up, 1 for drop off
-                                pick_drop.push_back(0);
-                        }
+                        requestinfo.name = personName; requestinfo.start = start; requestinfo.end = end;
+                        if(start.first < x_boundary && end.first < x_boundary && start.second < y_boundary && end.second < y_boundary)
+                                RequestList.push_back(requestinfo);
                         else
                                 throw("Invalid request location");
-
                 }
-
         }
 }
 /**
- * @brif This is the algorithm to solve the TravelSalesMan problem using Dynamic programming, it will find the shortest possible route that visits each node once without returning back to the original node.
+ * @brief: Base on a specific threshold, read limit number of requests from the RequestList
+ * @param NumVertex [int] threshold of the request number
+ */
+void Carpooling_cloud_server::add_start(int NumVertex){
+        if(!RequestList.empty() && startToend.size() < NumVertex) {
+                for(int i = startToend.size(); i < NumVertex; i++) {
+                        if (!RequestList.empty()) {
+                                // Add the name of the passenger to the list
+                                RequestInfo requestinfo = RequestList.front();
+                                names.push_back(requestinfo.name);
+                                // Read the start and end location from the request
+                                startToend.insert(std::make_pair(requestinfo.name,requestinfo.end));
+                                places.push_back(requestinfo.start);
+                                pick_drop.push_back(0);
+                                RequestList.pop_front();
+                        }
+                        else
+                                return;
+                }
+        }
+}
+
+/**
+ * @brief: Create a dp table to store the possible states with a given mask and init position. It is used to optimize the path search in TSP function]
+ * @param size [int] number of vertex
+ */
+void Carpooling_cloud_server::createDPtable(int size){
+        std::size_t exp = exp2(size); // Distinct states in DP is 2 ^n
+        std::vector<std::vector<int> > dpTable(exp,std::vector<int>(size)); // a 2^n by n table
+        for(int i = 0; i < dpTable.size(); i++) {
+                for(int j = 0; j < dpTable[i].size(); j++) {
+                        dpTable[i][j] = -1;   // initialize all the element in the vector as -1
+                }
+        }
+        dp = dpTable;
+}
+/**
+ * @brief: This is the algorithm to solve the TravelSalesMan problem using Dynamic programming, it will find the shortest possible route that visits each node once without returning back to the original node.
+ * with the dp table, this optimized search will provide the solution with time complexity O(n^2 * 2^n)
  * @param  mask [vector<int>] 0 for unvisited node, 1 for visited node
  * @param  pos  [int] start vertex index, usually is 0
  * @param  node [Node] init node. Use to find the next node to travel
@@ -97,8 +128,15 @@ int Carpooling_cloud_server::TravelSalesMan(std::vector<int> mask,int pos,std::s
         if(mask == VISITED_ALL) {
                 return 0;
         }
+        std::size_t m = 0;
+        for(int i = 0; i < mask.size(); i++) {
+                m += mask[i]*exp2(i);
+        }
+        if(dp[m][pos] != -1) { // if the sub-problem is overlapped. Namely, the sub-problem is calculated before
+                return dp[m][pos];
+        }
         int ans = INT_MAX;
-        // Using Dynamic Programming to find the shortest path that can Travel all the vertex
+        // Using Dynamic Programming to find the shortest path that can Travel all the vertexes
         for (int index = 0; index < places.size(); index++) {
                 if(mask[index] == 0) {
                         std::shared_ptr<Node> newNode =  std::make_shared<Node>(index);
@@ -113,7 +151,8 @@ int Carpooling_cloud_server::TravelSalesMan(std::vector<int> mask,int pos,std::s
                 }
         }
 
-        return node->next->data;
+        // store the current problem into the look-up table
+        return dp[m][pos] = ans;
 }
 /**
  * [Carpooling_cloud_server::makeAction Making an action: move, drop or pick for the current vertex]
@@ -172,7 +211,7 @@ void Carpooling_cloud_server::makeAction(Location target,int index){
         return;
 }
 /**
- * @brif: delete the start or end point in the list, NOTE: the index here is the specified position in vector "places", which contains one more element comparing to other vectors
+ * @brief: delete the start or end point in the list, NOTE: the index here is the specified position in vector "places", which contains one more element comparing to other vectors
  * @param index [int]
  **/
 void Carpooling_cloud_server::deleteVertex(int index) {
@@ -182,7 +221,7 @@ void Carpooling_cloud_server::deleteVertex(int index) {
         return;
 }
 /**
- * @brif: add the endpoint to the vector "places",which will be used to build the vertex graph later.
+ * @brief: add the endpoint to the vector "places",which will be used to build the vertex graph later.
  * @param index [int]
  */
 void Carpooling_cloud_server::add_end(int index){
@@ -193,15 +232,18 @@ void Carpooling_cloud_server::add_end(int index){
         return;
 }
 /**
- * @brif: The function that implements the carpooling algorithm
+ * @brief: The function that implements the carpooling algorithm
  * @param request [Json::Value request]
  */
 void Carpooling_cloud_server::carpooling(Json::Value request) {
-        add_start(request);  // Read the request
+        ReadRequest(request);
+        add_start(10); // Read the request
         if(!names.empty()) {    // If there is a request at this time
                 buildGrids();   // Build the vertex graph
-                int index = TravelSalesMan(mask,0,initNode); // Find the shortest path and return the index of next node
+                int shortestPath = TravelSalesMan(mask,0,initNode); // Find the shortest path and return the index of next node
+                int index = initNode->next->data;
                 Location point = places[index];
                 makeAction(point,index);   // Make action according to the desired node and corrent vehicle location
+                dp.clear();
         }
 }

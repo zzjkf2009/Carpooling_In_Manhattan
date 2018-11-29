@@ -76,12 +76,14 @@ TEST(carpoolingTest, TSPTest) {
         cloudServer.places.push_back(b);
         cloudServer.places.push_back(c);
         cloudServer.buildGrids();
-        EXPECT_EQ(1, cloudServer.TravelSalesMan(cloudServer.mask,0,cloudServer.initNode));
+        cloudServer.TravelSalesMan(cloudServer.mask,0,cloudServer.initNode);
+        EXPECT_EQ(1, cloudServer.initNode->next->data);
         std::cout << "next node is "<<cloudServer.places[cloudServer.TravelSalesMan(cloudServer.mask,0,cloudServer.initNode)].second << '\n';
 }
 /**
    *[TEST Testing reading requests from the JSON file]
- */
+ **/
+
 TEST(carpoolingTest, add_startTest){
         Json::Reader reader;
         Json::Value request;
@@ -89,7 +91,8 @@ TEST(carpoolingTest, add_startTest){
         if(!reader.parse(text,request))
                 std::cout<<reader.getFormattedErrorMessages()<<std::endl;
         Carpooling_cloud_server cloudServer(10,10);          // the init_loc of the car is allready added to the places in constructor
-        cloudServer.add_start(request);
+        cloudServer.ReadRequest(request); // Read the request
+        cloudServer.add_start(10);
         EXPECT_EQ(2,cloudServer.names.size()); // add two names
         EXPECT_EQ(3,cloudServer.places.size()); // including the current location
         EXPECT_EQ(2,cloudServer.pick_drop.size()); // add two locations mark as start point
@@ -97,7 +100,7 @@ TEST(carpoolingTest, add_startTest){
 }
 /**
  * [TEST Testing if the customer location is out of defined range, it will throw an assertion]
- */
+ **/
 TEST(carpoolingTest, add_start_Out_Test){
         Json::Reader reader;
         Json::Value request;
@@ -105,7 +108,7 @@ TEST(carpoolingTest, add_start_Out_Test){
         if(!reader.parse(text,request))
                 std::cout<<reader.getFormattedErrorMessages()<<std::endl;
         Carpooling_cloud_server cloudServer(10,10);    // the init_loc of the car is allready added to the places in constructor
-        EXPECT_ANY_THROW(cloudServer.add_start(request));
+        EXPECT_ANY_THROW(cloudServer.ReadRequest(request));
 }
 /**
  * [TEST Testing when the current car is not at the target node, then move to the target node with minimal turns]
@@ -132,7 +135,8 @@ TEST(carpoolingTest, makeActionTestPick) {
                 std::cout<<reader.getFormattedErrorMessages()<<std::endl;
         Car car({2,3}); // assume the car arrives at (2,3), where Elson is located
         Carpooling_cloud_server cloudServer(car,10,10);   // the init_loc of the car is allready added to the places in constructor
-        cloudServer.add_start(request);
+        cloudServer.ReadRequest(request); // Read the request
+        cloudServer.add_start(10);
         Location a(2,3);
         cloudServer.makeAction(a,1); // so the car should pick Elson up
         EXPECT_EQ(2,cloudServer.names.size());
@@ -151,7 +155,8 @@ TEST(carpoolingTest, deleteVertexTest) {
         if(!reader.parse(text,request))
                 std::cout<<reader.getFormattedErrorMessages()<<std::endl;
         Carpooling_cloud_server cloudServer(10,10);
-        cloudServer.add_start(request);
+        cloudServer.ReadRequest(request);        // Read the request
+        cloudServer.add_start(10);
         cloudServer.deleteVertex(1);
         EXPECT_EQ(1,cloudServer.names.size());
         EXPECT_EQ(2,cloudServer.places.size());
@@ -169,7 +174,8 @@ TEST(carpoolingTest, add_endTest) {
         if(!reader.parse(text,request))
                 std::cout<<reader.getFormattedErrorMessages()<<std::endl;
         Carpooling_cloud_server cloudServer(10,10);
-        cloudServer.add_start(request);
+        cloudServer.ReadRequest(request); // Read the request
+        cloudServer.add_start(10);
         cloudServer.add_end(1);
         EXPECT_EQ(3,cloudServer.names.size());
         EXPECT_EQ(4,cloudServer.places.size());
