@@ -33,9 +33,9 @@ To run the unit test
 ```
 ## Reuslt
 There is the result for receiving two requests, check request1.json and request2.json for content. The first request was received at 2 (step time) and the second was received at 6 (step time). The result was showed in the following figure.
-- ![](https://github.com/zzjkf2009/Carpooling_In_Manhatton/blob/master/CarpoolingResult.png)
+- ![](https://github.com/zzjkf2009/Carpooling_In_Manhattan/blob/master/CarpoolingResult.png)
 The unit tests result is showed below:
-- ![](https://github.com/zzjkf2009/Carpooling_In_Manhatton/blob/master/CarpoolingTest.png)
+- ![](https://github.com/zzjkf2009/Carpooling_In_Manhattan/blob/master/CarpoolingTest.png)
 
 ## TODO
 It may be better data structure to maintain the request queue efficiently. And the this VTSP algorithm works great with the situation when there is the only car and this mission was to deliver all passengers to their destination. It saves the overall time, but it may not guarantee it is the best path for every single passenger (trade-off). If we have multiple vehicles and the algorithm can be changed a little bit by limiting the detour length for each ride. Moreover, a GUI could be built for visualization the carpooling process using OpenCV etc. 

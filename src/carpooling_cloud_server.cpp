@@ -80,7 +80,7 @@ void Carpooling_cloud_server::ReadRequest(Json::Value request){
 }
 /**
  * @brief: Base on a specific threshold, read limit number of requests from the RequestList
- * @param NumVertex [int] threshold of the request number
+ * @param NumVertex [int] threshold of the request number (each request has two nodes/locations) to insert into the graph.The maximum value would be 32, but a relatively small number is recommended, say 5 or 10.
  */
 void Carpooling_cloud_server::add_start(int NumVertex){
         if(!RequestList.empty() && startToend.size() < NumVertex) {
@@ -121,7 +121,7 @@ void Carpooling_cloud_server::createDPtable(int size){
  * @param  mask [vector<int>] 0 for unvisited node, 1 for visited node
  * @param  pos  [int] start vertex index, usually is 0
  * @param  node [Node] init node. Use to find the next node to travel
- * @return      [int]  index of the next node
+ * @return      [int]  the length of the shortest path
  */
 int Carpooling_cloud_server::TravelSalesMan(std::vector<int> mask,int pos,std::shared_ptr<Node> node) {
         // if all nodes are visited, then return the init node, which means remain in a place.
@@ -237,8 +237,8 @@ void Carpooling_cloud_server::add_end(int index){
  */
 void Carpooling_cloud_server::carpooling(Json::Value request) {
         ReadRequest(request);
-        add_start(10); // Read the request
-        if(!names.empty()) {    // If there is a request at this time
+        add_start(10); // Read maximum of 10 requests and put other requests in the waiting list
+        if(!names.empty()) {
                 buildGrids();   // Build the vertex graph
                 int shortestPath = TravelSalesMan(mask,0,initNode); // Find the shortest path and return the index of next node
                 int index = initNode->next->data;
